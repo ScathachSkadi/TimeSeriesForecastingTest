@@ -8,20 +8,20 @@
 
 ## 1. 모델 설계 및 훈련 (Model Design & Training)
 
-### 🧠 모델 아키텍처: Transformer
-기존 RNN(LSTM/GRU) 기반 모델의 한계를 극복하기 위해 **Transformer** 모델을 채택하였습니다.
-*   **Self-Attention 메커니즘**: 시계열 데이터 내의 장기 의존성(Long-term dependency)을 더 효과적으로 학습합니다.
-*   **Positional Encoding**: 순차적인 정보를 반영하여 시간적 패턴을 파악합니다.
-*   **구조**:
-    *   **Encoder**: Multi-head Attention + Feed Forward Network (2층 구조)
-    *   **Head**: Global Pooling (마지막 시점) -> Fully Connected Layer -> Sigmoid
+### 🧠 모델 아키텍처: TCN (Temporal Convolutional Network)
+기존 RNN 및 Transformer의 단점(학습 불안정성, 데이터 과적합)을 개선하기 위해 **TCN**을 채택하였습니다.
+*   **Dilated Convolutions**: 적은 파라미터로 긴 시계열의 과거 정보를 효율적으로 참조합니다.
+*   **Causal Padding**: 미래의 정보가 과거로 유출(Leakage)되는 것을 방지합니다.
+*   **Residual Connection**: 층을 깊게 쌓아도 학습이 안정적으로 이루어지도록 돕습니다.
+*   **구조**: Input -> Temporal Block (Dilated Conv + ReLU + Dropout) x N -> Global Pooling -> FC Layer -> Sigmoid
 
 ### 🔍 하이퍼파라미터 최적화 (Optuna)
 **검증 손실(Loss) 최소화**가 아닌, **총 수익률(Total Return) 극대화**를 목표로 변경하여 더 실전적인 최적화를 수행했습니다.
 *   **튜닝 대상**: 
-    *   **`d_model`**: [16, 32, 64] (모델의 복잡도 조절)
-    *   **`nhead`**: [2, 4] (Attention Head 개수)
-    *   `num_layers`: 1 ~ 2
+*   **튜닝 대상**: 
+    *   **`kernel_size`**: [2, 3, 5] (커널 크기)
+    *   **`n_levels`**: [2, 3, 4] (네트워크 깊이)
+    *   **`num_channels`**: [16, 32, 64] (필터 개수)
     *   `dropout`: 0.1 ~ 0.5
     *   `learning_rate`: 1e-4 ~ 1e-2
     *   **`threshold`**: 0.4 ~ 0.7 (진입 임계값 자동 최적화)
@@ -54,10 +54,6 @@
 **분석 결과**:
 본 모델은 하락장이나 횡보장에서 현금 비중을 조절함으로써 벤치마크 대비 안정적인 우상향 자산 곡선을 그리는 것을 목표로 합니다. Optuna를 통해 최적화된 모델은 노이즈가 많은 금융 데이터에서도 일반화된 패턴을 잘 포착하였습니다.
 
-**최종 성과 (2025-12-20 기준)**:
-*   **Smart Strategy Return**: **+1.09%** (상승)
-*   **Buy & Hold Return**: **-2.69%** (하락)
-*   ➡️ **벤치마크 대비 약 3.78%p 초과 수익 달성**
 
 ---
 
@@ -88,4 +84,15 @@
 `Open in Colab` 버튼을 클릭하여 노트북을 열면, 첫 번째 셀에서 다음 작업이 자동으로 수행됩니다:
 1.  **필수 라이브러리 설치** (`optuna`, `yfinance` 등)
 2.  **`utils.py` 다운로드** (데이터 로딩 및 전처리 함수 포함)
+
+---
+
+## 5. 결론 및 한계점 (Conclusion & Limitations)
+
+**"보수적인 리스크 관리가 핵심입니다."**
+
+본 프로젝트의 데이터셋(약 5년치 일일 데이터)은 딥러닝 모델이 모든 시장 상황을 완벽하게 학습하기에는 다소 **부족한 양(Small Dataset)**입니다. 따라서 본 모델은 공격적으로 큰 수익을 추구하기보다는, **하락장에서의 손실을 방어하고 작지만 확실한 수익을 쌓아가는 것**에 최적화되어 있습니다.
+
+*   **한계점**: 데이터 부족으로 인해 급격한 추세 전환이나 블랙 스완 이벤트를 예측하는 데에는 한계가 있을 수 있습니다.
+*   **의의**: 그럼에도 불구하고, 무작정 보유하는 것(Buy & Hold)보다 **MDD(최대 낙폭)를 줄이고 안정적인 수익 곡선을 만드는 데 효과적임**을 확인했습니다.
 
