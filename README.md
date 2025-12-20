@@ -19,12 +19,13 @@
 **검증 손실(Loss) 최소화**가 아닌, **총 수익률(Total Return) 극대화**를 목표로 변경하여 더 실전적인 최적화를 수행했습니다.
 *   **튜닝 대상**: 
 *   **튜닝 대상**: 
-    *   **`kernel_size`**: [2, 3, 5] (커널 크기)
-    *   **`n_levels`**: [2, 3, 4] (네트워크 깊이)
-    *   **`num_channels`**: [16, 32, 64] (필터 개수)
-    *   `dropout`: 0.1 ~ 0.5
-    *   `learning_rate`: 1e-4 ~ 1e-2
-    *   **`threshold`**: 0.4 ~ 0.7 (진입 임계값 자동 최적화)
+    *   **과적합(Overfitting) 방지 전략**:
+        *   `weight_decay`: **L2 규제** 추가 (Optuna 튜닝 대상)
+        *   `dropout`: 0.2 ~ 0.5 (높은 Drop 확률)
+        *   `kernel_size`: [2, 3] (복잡도 감소를 위해 5 제외)
+        *   `num_channels`: [16, 32] (네트워크 용량 축소)
+    *   `learning_rate`: 1e-4 ~ 1e-3
+    *   **`threshold`**: 0.4 ~ 0.7
 *   **목표 함수**: Validation Set에서의 시뮬레이션 수익률 (Maximize Profit)
 
 ---
