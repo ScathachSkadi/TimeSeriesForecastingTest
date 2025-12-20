@@ -8,22 +8,20 @@
 
 ## 1. 모델 설계 및 훈련 (Model Design & Training)
 
-### 🧠 모델 아키텍처: Optimized GRU
-기존 LSTM 모델의 한계(과적합, 연산 효율성)를 개선하기 위해 **GRU (Gated Recurrent Unit)** 모델을 채택하였습니다.
-
-*   **모델 구조**:
-    *   **Input Layer**: 30일치 시계열 데이터 (기술적 지표 포함)
-    *   **GRU Layers**: 2층 구조 (Batch Normalization 적용)
-    *   **Dropout**: 0.3 (과적합 방지를 위한 규제)
-    *   **Fully Connected Layer**: 최종 확률 출력 (Sigmoid)
-*   **개선 사항 (Refinement)**:
-    *   초기에는 Hidden Size를 64로 설정하였으나, 학습 데이터(약 1,500건) 대비 모델이 너무 커서 **과적합(Overfitting)** 위험이 있음을 확인했습니다.
-    *   따라서 **Hidden Size를 32**로 축소하여 더 강건한(Robust) 모델을 설계했습니다.
+### 🧠 모델 아키텍처: Transformer
+기존 RNN(LSTM/GRU) 기반 모델의 한계를 극복하기 위해 **Transformer** 모델을 채택하였습니다.
+*   **Self-Attention 메커니즘**: 시계열 데이터 내의 장기 의존성(Long-term dependency)을 더 효과적으로 학습합니다.
+*   **Positional Encoding**: 순차적인 정보를 반영하여 시간적 패턴을 파악합니다.
+*   **구조**:
+    *   **Encoder**: Multi-head Attention + Feed Forward Network (2층 구조)
+    *   **Head**: Global Pooling (마지막 시점) -> Fully Connected Layer -> Sigmoid
 
 ### 🔍 하이퍼파라미터 최적화 (Optuna)
 **검증 손실(Loss) 최소화**가 아닌, **총 수익률(Total Return) 극대화**를 목표로 변경하여 더 실전적인 최적화를 수행했습니다.
 *   **튜닝 대상**: 
-    *   `hidden_size`: [32, 64]
+    *   **`d_model`**: [16, 32, 64] (모델의 복잡도 조절)
+    *   **`nhead`**: [2, 4] (Attention Head 개수)
+    *   `num_layers`: 1 ~ 2
     *   `dropout`: 0.1 ~ 0.5
     *   `learning_rate`: 1e-4 ~ 1e-2
     *   **`threshold`**: 0.4 ~ 0.7 (진입 임계값 자동 최적화)
@@ -85,5 +83,9 @@
 
 2.  **솔루션 실행**:
     *   `solution_notebook.ipynb` 파일을 실행합니다.
-    *   모든 셀을 순차적으로 실행하면 **Optuna 최적화 -> 모델 학습 -> 전략 시뮬레이션**이 자동으로 수행됩니다.
+
+### Google Colab 실행 (Open in Colab)
+`Open in Colab` 버튼을 클릭하여 노트북을 열면, 첫 번째 셀에서 다음 작업이 자동으로 수행됩니다:
+1.  **필수 라이브러리 설치** (`optuna`, `yfinance` 등)
+2.  **`utils.py` 다운로드** (데이터 로딩 및 전처리 함수 포함)
 
